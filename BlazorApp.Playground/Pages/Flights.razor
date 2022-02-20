@@ -22,38 +22,24 @@
     
     public async ValueTask<ItemsProviderResult<Flight>> LoadAllFlights(ItemsProviderRequest request)
     {
-        var total = FlightService.allFlights.Count();
+        var total = FlightService.allFlights.Length;
         
         Debug.WriteLine($"startIdx={request.StartIndex}, requestCount={request.Count}");
 
-        var flights = await FlightService.GetChunk(request.StartIndex, request.Count, request.CancellationToken);
+        var numFlights = Math.Min(request.Count, total - request.StartIndex);
+        var flights = await FlightService.GetChunk(request.StartIndex, numFlights, request.CancellationToken);
 
         return new ItemsProviderResult<Flight>(flights, total);
     }
 
     private class FlightService
     {
-        public static IEnumerable<Flight> allFlights = Enumerable.Range(1, 10_000).Select(FlightBuilder.Build);
+        public static Flight[] allFlights = Enumerable.Range(1, 10_000).Select(FlightBuilder.Build).ToArray();
 
 
-        public static async Task<IEnumerable<Flight>> GetChunk(int startIndex, int chunkSize, CancellationToken ct)
+        public static async Task<IEnumerable<Flight>> GetChunk(int startIdx, int chunkSize, CancellationToken ct)
         {
-            var maxStartIdx = allFlights.Count() / chunkSize;
-            var fetchSize = chunkSize;
-
-            var alwaysGetLastEntireChunk = allFlights.Count() % chunkSize == 0;
-            if (startIndex > maxStartIdx)
-            {
-                startIndex = maxStartIdx;
-                if (alwaysGetLastEntireChunk)
-                    startIndex--;
-                
-                fetchSize = Math.Min(chunkSize, allFlights.Count() % chunkSize);
-
-                Debug.WriteLine($"defaulted to: startIdx={startIndex} fetchSize={fetchSize}");
-            }
-            
-            return allFlights.Skip(chunkSize * startIndex).Take(fetchSize);
+            return new ArraySegment<Flight>(allFlights, startIdx, chunkSize);
         }
     }
 
