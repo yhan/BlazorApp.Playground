@@ -1,0 +1,15 @@
+﻿@using BlazorApp.Playground.Data
+
+<li>
+    <label>@Flight.FlightId</label>
+    <label>@Flight.Summary</label>
+</li>
+
+@code {
+
+    [Parameter]
+    public Flight Flight { get; set; }
+
+    [Parameter]
+    public string Details { get; set; }
+}
