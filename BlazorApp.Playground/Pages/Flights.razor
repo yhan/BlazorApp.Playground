@@ -1,20 +1,24 @@
 ﻿
 @page "/flight"
-
-@using System.Collections
 @using System.Diagnostics
 @using BlazorApp.Playground.Data
+@using Microsoft.EntityFrameworkCore.ChangeTracking.Internal
+@using System.Buffers
+
+@inject FlightRepository _repository;
 
 
 <div style="height: 300px; overflow-y: scroll">
-    
-    <Virtualize Context="flight"  ItemsProvider="@LoadAllFlights">
-        <FlightSummary  Flight="@flight"  @key="flight.FlightId" Details="@flight.Summary" />
+    <button class="btn btn-primary" @onclick="BuildData">Click me</button>
+
+    <Virtualize Context="flight" ItemsProvider="@LoadAllFlights_NoPool" @ref="Table">
+        <FlightSummary Flight="@flight" @key="flight.FlightId" Details="@flight.Summary"/>
     </Virtualize>
 </div>
 
 @code {
-    
+
+    Flight[] _buffer = Array.Empty<Flight>();
     protected override Task OnInitializedAsync()
     {
         return Task.CompletedTask;
@@ -22,13 +26,34 @@
     
     public async ValueTask<ItemsProviderResult<Flight>> LoadAllFlights(ItemsProviderRequest request)
     {
-        var total = FlightService.allFlights.Length;
+        var total = await _repository.Count();
+        var numFlights = Math.Min(request.Count, total - request.StartIndex);
         
-        Debug.WriteLine($"startIdx={request.StartIndex}, requestCount={request.Count}");
+        if (numFlights != _buffer.Length)
+        {
+            Debug.WriteLine($"[debug] resize from {_buffer.Length} to {numFlights}");
+            Array.Resize(ref _buffer, numFlights);
+        }
+        
+        var t = await _repository.GetChunk(request.StartIndex, numFlights, _buffer, request.CancellationToken);
+        return new ItemsProviderResult<Flight>(t, total);
+    }
+
+    public async ValueTask<ItemsProviderResult<Flight>> LoadAllFlights_NoPool(ItemsProviderRequest request)
+    {
+        var total = await _repository.Count();
 
         var numFlights = Math.Min(request.Count, total - request.StartIndex);
-        var flights = await FlightService.GetChunk(request.StartIndex, numFlights, request.CancellationToken);
-
-        return new ItemsProviderResult<Flight>(flights, total);
+        var t = await _repository.GetChunk_NoPool(request.StartIndex, numFlights, request.CancellationToken);
+        
+        return new ItemsProviderResult<Flight>(t, total);
     }
+
+    private async Task BuildData()
+    {
+        await _repository.Init();
+    }
+
+    public Virtualize<Flight> Table { get; set; }
+
 }

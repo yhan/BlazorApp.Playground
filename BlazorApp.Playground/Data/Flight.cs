@@ -12,17 +12,6 @@ public class Flight
     public string Summary { get; set; }
 }
 
-public class FlightService
-{
-    public static Flight[] allFlights = Enumerable.Range(1, 10_000).Select(FlightBuilder.Build).ToArray();
-
-
-    public static async Task<IEnumerable<Flight>> GetChunk(int startIdx, int chunkSize, CancellationToken ct)
-    {
-        return new ArraySegment<Flight>(allFlights, startIdx, chunkSize);
-    }
-}
-
 public class FlightBuilder
 {
     private static Random random = new Random();
