@@ -1,0 +1,3 @@
+[submodule "blazor_pivottable"]
+	path = blazor_pivottable
+	url = https://github.com/yhan/blazor_pivottable.git
