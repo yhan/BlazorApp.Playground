@@ -1,0 +1,13 @@
+﻿@page "/ParentBind"
+
+<h1>Password Binding</h1>
+
+<PasswordEntry @bind-Password="password" @bind-Password:event="PasswordChanged"/>
+
+<p>
+    <code>password</code>: @password
+</p>
+
+@code {
+    private string password = "Not set";
+}
