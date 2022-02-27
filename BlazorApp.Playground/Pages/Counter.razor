@@ -1,22 +1,48 @@
 ﻿@page "/counter"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage ProtectedSessionStore
 
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
-
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+@if (currentCount.HasValue)
+{
+    <p>Current count: <strong>@currentCount</strong></p>
+    <button @onclick="IncrementCount">Increment</button>
+}
+else
+{
+    <p>Loading...</p>
+}
 
 @code {
-    private int currentCount = 0;
+    private int? currentCount;
+    private bool isConnected;
 
     [Parameter]
     public int IncrementAmount { get; set; } = 2;
 
-    private void IncrementCount()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isConnected = true;
+    // reload the page, state still persists
+    // browser storage is accessed asynchronously over a network connection
+            var result = await ProtectedSessionStore.GetAsync<int>("count");
+            currentCount = result.Success ? result.Value : 0;
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task IncrementCount()
     {
         currentCount += IncrementAmount;
+
+        // save the state to browser's sessionStorage
+        await ProtectedSessionStore.SetAsync("count", currentCount);
     }
 
 }
