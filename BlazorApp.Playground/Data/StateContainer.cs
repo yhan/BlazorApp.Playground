@@ -17,4 +17,14 @@ public class StateContainer
     public event Action? OnChange;
 
     private void NotifyStateChanged() => OnChange?.Invoke();
+
+    public async Task RunAsync()
+    {
+        while (true)
+        {
+            await Task.Delay(1000);
+
+            Property = $"Now {DateTime.Now}";
+        }
+    }
 }

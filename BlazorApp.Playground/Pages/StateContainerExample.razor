@@ -18,7 +18,12 @@
 @code {
     protected override void OnInitialized()
     {
-        StateContainer.OnChange += StateHasChanged;
+        StateContainer.OnChange += ChangeState;
+    }
+
+    private void ChangeState()
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private void ChangePropertyValue()
@@ -29,6 +34,6 @@
 
     public void Dispose()
     {
-        StateContainer.OnChange -= StateHasChanged;
+        StateContainer.OnChange -= ChangeState;
     }
 }

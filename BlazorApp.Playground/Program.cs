@@ -13,12 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddScoped<StateContainer>();
+builder.Services.AddSingleton<StateContainer>();
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
         new[] { "application/octet-stream" });
 });
+
+builder.Services.AddHostedService<WorkerInBlazor>();
 
 
 //builder.Services.AddDbContext<FlightsDbContext>(options =>
@@ -60,4 +62,19 @@ app.Run();
 void StdOut(string obj)
 {
     Debug.WriteLine(obj);
+}
+
+public class WorkerInBlazor : BackgroundService
+{
+    private readonly StateContainer _container;
+
+    public WorkerInBlazor(StateContainer container)
+    {
+        _container = container;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await _container.RunAsync();
+    }
 }
