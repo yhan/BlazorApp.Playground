@@ -42,6 +42,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+//app.MapGet("/", () => "Hello World!");
+app.Use(async (context, next) =>
+{
+    // ...
+    Debug.WriteLine($"[dbg] pipeline: {context.Request.Path} next: type={next.Target?.GetType().Name} method={next.Method.Name}");
+    await next(context);
+});
+
 app.MapHub<ChatHub>("/chathub");
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

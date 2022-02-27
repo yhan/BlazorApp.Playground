@@ -1,0 +1,60 @@
+﻿@page "/search"
+@using System.Net.Http.Headers
+@inject NavigationManager NavigationManager
+@inject ILogger<Navigate> Logger
+
+<h1>Search Example</h1>
+
+<p>Filter: @Filter</p>
+
+<p>Page: @Page</p>
+
+<button class="btn btn-primary" @onclick="NavigateToUrl">
+    Navigate to ...
+</button>
+
+@if (Stars is not null)
+{
+    <p>Assignees:</p>
+
+    <ul>
+        @foreach (var name in Stars)
+        {
+            <li>@name</li>
+        }
+    </ul>
+}
+
+@code {
+    
+    //play with "filter=scifi%20stars&page=3&star=LeVar%20Burton&star=Gary%20Oldman"
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Filter { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? Page { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "star")]
+    public string[]? Stars { get; set; }
+
+    private void NavigateToUrl()
+    {
+        var param = new Dictionary<string, object?>()
+        {
+            ["name"] = "yi",
+            ["age"] = 42
+        };
+
+        var uri = NavigationManager.GetUriWithQueryParameters(param);
+        //var uri2 = NavigationManager.GetUriWithQueryParameter("product_id", 42);
+        //Logger.LogInformation(uri2);
+
+
+        NavigationManager.NavigateTo(uri);
+    }
+
+}
